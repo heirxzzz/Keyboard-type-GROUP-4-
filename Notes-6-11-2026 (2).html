@@ -1,0 +1,468 @@
+<html>
+        <head><title>Downloaded HTML</title></head>
+        <body>
+            <pre style="white-space: pre-wrap; word-wrap: break-word;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Type or Explode - Typing Game</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at top, #252b46, #090c18 75%);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.game {
+    width: 100%;
+    max-width: 750px;
+    background: #151a2d;
+    border: 1px solid #343d5c;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 15px 50px #0008;
+    text-align: center;
+}
+
+h1 {
+    color: #ff5252;
+    font-size: 35px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #aab3cc;
+    margin-bottom: 25px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.stat {
+    background: #222a43;
+    border-radius: 12px;
+    padding: 12px 5px;
+}
+
+.stat small {
+    display: block;
+    color: #aab3cc;
+    margin-bottom: 5px;
+}
+
+.stat strong {
+    font-size: 23px;
+}
+
+.bomb {
+    font-size: 90px;
+    margin: 15px;
+    animation: shake 1s infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(4deg); }
+    75% { transform: rotate(-4deg); }
+}
+
+.word {
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #ffcc55;
+    margin: 15px 0;
+    overflow-wrap: anywhere;
+}
+
+input {
+    width: 100%;
+    padding: 17px;
+    font-size: 21px;
+    border-radius: 10px;
+    border: 2px solid #536080;
+    background: #0d1324;
+    color: white;
+    text-align: center;
+    outline: none;
+}
+
+input:focus {
+    border-color: #ff5252;
+}
+
+button, select {
+    padding: 12px 22px;
+    border: none;
+    border-radius: 9px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button {
+    background: #ff5252;
+    color: white;
+    margin: 7px;
+}
+
+button:hover {
+    background: #e83d3d;
+}
+
+select {
+    background: #29324c;
+    color: white;
+}
+
+.progress {
+    height: 10px;
+    background: #343c55;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px 0;
+}
+
+.bar {
+    height: 100%;
+    width: 100%;
+    background: #ff5252;
+    transition: width .3s;
+}
+
+.message {
+    min-height: 25px;
+    color: #aab3cc;
+    margin: 15px;
+}
+
+.hidden {
+    display: none;
+}
+
+.instructions {
+    font-size: 13px;
+    color: #9da8c4;
+    margin-top: 20px;
+}
+
+@media(max-width: 500px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 28px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <h1>💣 TYPE OR EXPLODE</h1>
+    <p class="subtitle">Type fast. Defuse bombs. Survive!</p>
+
+    <div class="stats">
+        <div class="stat">
+            <small>SCORE</small>
+            <strong id="score">0</strong>
+        </div>
+        <div class="stat">
+            <small>TIME</small>
+            <strong id="time">60</strong>
+        </div>
+        <div class="stat">
+            <small>LIVES</small>
+            <strong id="lives">❤️❤️❤️</strong>
+        </div>
+        <div class="stat">
+            <small>ACCURACY</small>
+            <strong id="accuracy">100%</strong>
+        </div>
+    </div>
+
+    <div>
+        <label for="difficulty">Difficulty: </label>
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+    </div>
+
+    <div class="bomb">💣</div>
+
+    <p>TYPE THIS WORD TO DEFUSE:</p>
+
+    <div class="word" id="word">READY?</div>
+
+    <input
+        id="typing"
+        type="text"
+        placeholder="Type the word here..."
+        autocomplete="off"
+        disabled
+    >
+
+    <div class="progress">
+        <div class="bar" id="bar"></div>
+    </div>
+
+    <p class="message" id="message">
+        Press START GAME to begin!
+    </p>
+
+    <button id="startBtn" onclick="startGame()">▶ START GAME</button>
+    <button onclick="resetGame()">↻ RESET</button>
+
+    <div id="result" class="hidden">
+        <h2 id="resultTitle">GAME OVER!</h2>
+        <p id="finalScore"></p>
+        <p id="bestScore"></p>
+        <button onclick="startGame()">PLAY AGAIN</button>
+    </div>
+
+    <p class="instructions">
+        Instructions: Type the displayed word correctly before the bomb
+        countdown runs out. Each defused bomb gives you points.
+        Lose three lives and the game ends!
+    </p>
+
+</div>
+
+<script>
+const words = {
+    easy: [
+        "computer", "mouse", "keyboard", "screen",
+        "internet", "folder", "printer", "monitor"
+    ],
+    medium: [
+        "technology", "javascript", "software",
+        "hardware", "database", "password",
+        "download", "programming"
+    ],
+    hard: [
+        "cybersecurity", "microprocessor",
+        "troubleshooting", "authentication",
+        "communication", "configuration",
+        "information", "cryptography"
+    ]
+};
+
+let score = 0;
+let lives = 3;
+let time = 60;
+let currentWord = "";
+let timer;
+let bombTimer;
+let bombTime = 0;
+let maxBombTime = 0;
+let active = false;
+let attempts = 0;
+let correct = 0;
+
+const input = document.getElementById("typing");
+
+function randomWord() {
+    const level = document.getElementById("difficulty").value;
+    const list = words[level];
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+function updateStats() {
+    document.getElementById("score").textContent = score;
+    document.getElementById("time").textContent = time;
+    document.getElementById("lives").textContent =
+        "❤️".repeat(lives) + "🖤".repeat(3-lives);
+
+    let accuracy = attempts === 0
+        ? 100
+        : Math.round((correct / attempts) * 100);
+
+    document.getElementById("accuracy").textContent = accuracy + "%";
+}
+
+function newBomb() {
+    if (!active) return;
+
+    clearInterval(bombTimer);
+
+    currentWord = randomWord();
+    document.getElementById("word").textContent = currentWord;
+
+    const level = document.getElementById("difficulty").value;
+
+    maxBombTime = level === "easy" ? 10 :
+                  level === "medium" ? 7 : 5;
+
+    bombTime = maxBombTime;
+
+    updateBar();
+
+    bombTimer = setInterval(() => {
+        bombTime--;
+        updateBar();
+
+        if (bombTime <= 0) {
+            clearInterval(bombTimer);
+            lives--;
+            attempts++;
+            document.getElementById("message").textContent =
+                "💥 BOOM! You missed the word!";
+
+            updateStats();
+
+            if (lives <= 0) {
+                endGame();
+            } else {
+                newBomb();
+            }
+        }
+    }, 1000);
+
+    input.value = "";
+    input.focus();
+}
+
+function updateBar() {
+    const percentage = Math.max(0, bombTime / maxBombTime * 100);
+    const bar = document.getElementById("bar");
+
+    bar.style.width = percentage + "%";
+    bar.style.background = percentage < 30 ? "#ff3030" : "#ff5252";
+}
+
+input.addEventListener("input", () => {
+    if (!active) return;
+
+    if (input.value.trim().toLowerCase() ===
+        currentWord.toLowerCase()) {
+
+        clearInterval(bombTimer);
+
+        score += 10;
+        correct++;
+        attempts++;
+
+        document.getElementById("message").textContent =
+            "✅ BOMB DEFUSED! +10 POINTS";
+
+        updateStats();
+
+        newBomb();
+    }
+});
+
+function startGame() {
+    clearInterval(timer);
+    clearInterval(bombTimer);
+
+    score = 0;
+    lives = 3;
+    time = 60;
+    attempts = 0;
+    correct = 0;
+    active = true;
+
+    input.disabled = false;
+
+    document.getElementById("result").classList.add("hidden");
+    document.getElementById("startBtn").classList.add("hidden");
+    document.getElementById("difficulty").disabled = true;
+
+    updateStats();
+    newBomb();
+
+    timer = setInterval(() => {
+        time--;
+        updateStats();
+
+        if (time <= 0) {
+            endGame();
+        }
+    }, 1000);
+
+    document.getElementById("message").textContent =
+        "🔥 Game started! Type quickly!";
+}
+
+function endGame() {
+    active = false;
+
+    clearInterval(timer);
+    clearInterval(bombTimer);
+
+    input.disabled = true;
+
+    const best = Number(localStorage.getItem("typeBest") || 0);
+    const newBest = Math.max(score, best);
+
+    localStorage.setItem("typeBest", newBest);
+
+    document.getElementById("result").classList.remove("hidden");
+    document.getElementById("resultTitle").textContent =
+        lives <= 0 ? "💥 GAME OVER!" : "🏆 TIME'S UP!";
+
+    document.getElementById("finalScore").textContent =
+        "Your Score: " + score;
+
+    document.getElementById("bestScore").textContent =
+        "Highest Score: " + newBest;
+
+    document.getElementById("message").textContent =
+        "Game finished! Try again to beat your record.";
+
+    document.getElementById("word").textContent = "FINISHED!";
+    document.getElementById("difficulty").disabled = false;
+    document.getElementById("startBtn").classList.remove("hidden");
+}
+
+function resetGame() {
+    clearInterval(timer);
+    clearInterval(bombTimer);
+
+    active = false;
+    score = 0;
+    lives = 3;
+    time = 60;
+    attempts = 0;
+    correct = 0;
+
+    input.value = "";
+    input.disabled = true;
+
+    document.getElementById("word").textContent = "READY?";
+    document.getElementById("bar").style.width = "100%";
+    document.getElementById("message").textContent =
+        "Press START GAME to begin!";
+
+    document.getElementById("result").classList.add("hidden");
+    document.getElementById("startBtn").classList.remove("hidden");
+    document.getElementById("difficulty").disabled = false;
+
+    updateStats();
+}
+
+updateStats();
+</script>
+
+</body>
+</html>
+</pre>
+        </body>
+    </html>
